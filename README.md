@@ -52,34 +52,53 @@ Bridge MCP is a **Model Context Protocol (MCP)** server that gives **any AI** fu
 
 ---
 
-## 🚀 Installation
+## 🏗️ Architecture
 
-### Option 1: FastMCP Cloud (Easiest - No Install!)
+Bridge MCP uses a **Relay Architecture** to work across platforms:
 
-Connect directly to the hosted version:
 ```
-https://bridge-mcp.fastmcp.app/mcp
+┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
+│    Any AI       │         │  FastMCP Cloud  │         │  Your Windows   │
+│  (Claude, etc.) │◄───────►│  (Cloud Relay)  │◄───────►│  PC (Agent)     │
+└─────────────────┘  HTTPS  └─────────────────┘   HTTP  └─────────────────┘
 ```
 
-### Option 2: Local Installation
+- **Cloud Relay**: Runs on FastMCP Cloud (Linux), routes commands
+- **Local Agent**: Runs on your Windows PC, executes commands
+
+## 🚀 Quick Start
+
+### Step 1: Run Local Agent on Your Windows PC
 
 ```bash
-# Clone the repository
 git clone https://github.com/BarhamAgha1/Bridge-MCP.git
 cd Bridge-MCP
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the server
-python bridge_mcp.py
+pip install -r requirements-local.txt
+python local_agent.py
 ```
 
-### Option 3: Install as Package
+### Step 2: Expose Your Agent (for remote access)
 
+Option A - Using ngrok:
 ```bash
-pip install bridge-mcp
+ngrok http 8006
 ```
+
+Option B - Port forwarding on your router (advanced)
+
+### Step 3: Register Your Agent
+
+In your AI conversation with Bridge MCP:
+```
+Use register_agent with:
+- agent_id: "my-pc"
+- callback_url: "https://xxxx.ngrok.io" (from ngrok)
+- agent_name: "My Windows PC"
+```
+
+### Step 4: Start Controlling!
+
+Now use any tool like `screenshot()`, `click()`, `type_text()`, etc.
 
 ---
 
