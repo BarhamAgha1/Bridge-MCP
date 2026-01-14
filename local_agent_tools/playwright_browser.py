@@ -24,7 +24,30 @@ class BrowserManager:
             return
         
         try:
-            self.playwright = await async_playwright().start()
+            # Auto-install browsers if not present
+            try:
+                self.playwright = await async_playwright().start()
+            except Exception as install_error:
+                print("[Browser] Playwright browsers not found. Auto-installing...")
+                print("[Browser] This is a one-time setup (~100MB download)")
+                
+                # Install browsers synchronously
+                import subprocess
+                import sys
+                result = subprocess.run(
+                    [sys.executable, "-m", "playwright", "install", "chromium"],
+                    capture_output=True,
+                    text=True
+                )
+                
+                if result.returncode == 0:
+                    print("[Browser] ✅ Chromium installed successfully!")
+                    # Try again
+                    self.playwright = await async_playwright().start()
+                else:
+                    print(f"[Browser] ❌ Installation failed: {result.stderr}")
+                    raise install_error
+            
             # Launch headless=False so user can see it
             self.browser = await self.playwright.chromium.launch(headless=False)
             self.context = await self.browser.new_context(

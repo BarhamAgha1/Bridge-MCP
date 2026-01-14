@@ -186,8 +186,8 @@ cd Bridge-MCP
 ### Step 2: Install Dependencies
 ```bash
 pip install -r requirements-local.txt
-playwright install
 ```
+**Note:** Playwright browsers (~100MB) auto-install on first use - no manual setup needed!
 
 ### Step 3: Start the Local Agent
 ```bash
