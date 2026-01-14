@@ -134,8 +134,12 @@ Bridge MCP "sees" your apps:
 
 Bridge MCP now puts YOU in control:
 - **Command Interception:** Dangerous commands (writing files, running shell scripts) are BLOCKED by default.
-- **Approval Dashboard:** A notification appears on your local dashboard (`http://localhost:8006`).
-- **Safe Mode Toggle:** Want total autonomy? Toggle "Safe Mode" OFF (Always Approve) directly from the UI.
+- **Approval Overlay:** Approval requests appear directly in the AI Activity Overlay with three options:
+  - ✓ **APPROVE** - Execute this one command
+  - ✗ **DENY** - Block this command
+  - ✓ **ALWAYS APPROVE** - Disable Safe Mode and approve all future commands
+- **Dashboard Control:** View all pending requests at `http://localhost:8006`
+- **Safe Mode Toggle:** Switch Safe Mode on/off anytime from the web dashboard
 - **Peace of Mind:** You can leave the agent running without fear of it deleting your files.
 
 ## 👁️ Terminator Vision (Live Observability)
