@@ -16,9 +16,7 @@ from typing import Optional, Dict, Any
 import httpx
 
 mcp = FastMCP(
-    name="Bridge MCP",
-    version="1.0.0",
-    description="Universal PC Control for Any AI - Cloud Relay"
+    "Bridge MCP"
 )
 
 # Store for connected local agents
