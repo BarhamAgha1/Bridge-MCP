@@ -43,6 +43,8 @@ class AIOverlay:
         self.action_label = None
         self.stop_button = None
         self.progress_bar = None
+        self.approval_frame = None
+        self.pending_request_id = None
         
         # Colors - Glassmorphism theme
         self.colors = {
@@ -195,6 +197,71 @@ class AIOverlay:
             bg=self.colors['bg']
         )
         self.warning_label.pack(side='left')
+        
+        # Approval Panel (hidden by default)
+        self.approval_frame = tk.Frame(main_frame, bg='#2a1a1a', highlightbackground=self.colors['warning'], highlightthickness=2)
+        # Don't pack it yet - show only when needed
+        
+        approval_header = tk.Label(
+            self.approval_frame,
+            text="⚠️ APPROVAL REQUIRED",
+            font=('Segoe UI', 9, 'bold'),
+            fg=self.colors['warning'],
+            bg='#2a1a1a'
+        )
+        approval_header.pack(pady=(8, 4))
+        
+        self.approval_text = tk.Label(
+            self.approval_frame,
+            text="AI wants to run: run_cmd",
+            font=('Segoe UI', 9),
+            fg=self.colors['text'],
+            bg='#2a1a1a',
+            wraplength=280
+        )
+        self.approval_text.pack(pady=4, padx=10)
+        
+        approval_btns = tk.Frame(self.approval_frame, bg='#2a1a1a')
+        approval_btns.pack(pady=(4, 8))
+        
+        self.approve_btn = tk.Label(
+            approval_btns,
+            text="✓ APPROVE",
+            font=('Segoe UI', 9, 'bold'),
+            fg='white',
+            bg=self.colors['success'],
+            padx=20,
+            pady=6,
+            cursor='hand2'
+        )
+        self.approve_btn.pack(side='left', padx=5)
+        self.approve_btn.bind('<Button-1>', self._on_approve_clicked)
+        
+        self.deny_btn = tk.Label(
+            approval_btns,
+            text="✗ DENY",
+            font=('Segoe UI', 9, 'bold'),
+            fg='white',
+            bg=self.colors['warning'],
+            padx=20,
+            pady=6,
+            cursor='hand2'
+        )
+        self.deny_btn.pack(side='left', padx=5)
+        self.deny_btn.bind('<Button-1>', self._on_deny_clicked)
+        
+        self.always_approve_btn = tk.Label(
+            approval_btns,
+            text="✓ ALWAYS APPROVE",
+            font=('Segoe UI', 8, 'bold'),
+            fg='white',
+            bg=self.colors['accent'],
+            padx=15,
+            pady=6,
+            cursor='hand2'
+        )
+        self.always_approve_btn.pack(side='left', padx=5)
+        self.always_approve_btn.bind('<Button-1>', self._on_always_approve_clicked)
         
         # Bottom bar with Stop button
         bottom_frame = tk.Frame(main_frame, bg=self.colors['bg'])
@@ -384,6 +451,63 @@ class AIOverlay:
             except:
                 pass
     
+    def show_approval_request(self, request_id: str, command: str, params: dict):
+        """Show approval request in the overlay."""
+        self.pending_request_id = request_id
+        if self.approval_text and self.approval_frame:
+            try:
+                param_str = str(params)[:50] if params else ""
+                self.approval_text.config(text=f"AI wants to run: {command}\n{param_str}")
+                self.approval_frame.pack(fill='x', padx=15, pady=5, before=self.stop_button.master)
+            except Exception as e:
+                print(f"Error showing approval: {e}")
+    
+    def hide_approval_request(self):
+        """Hide approval request panel."""
+        if self.approval_frame:
+            try:
+                self.approval_frame.pack_forget()
+                self.pending_request_id = None
+            except:
+                pass
+    
+    def _on_approve_clicked(self, event):
+        """Handle approve button click."""
+        if self.pending_request_id:
+            import requests
+            try:
+                requests.post('http://127.0.0.1:8006/safety/approve', 
+                            json={'id': self.pending_request_id}, timeout=1)
+            except:
+                pass
+            self.hide_approval_request()
+    
+    def _on_deny_clicked(self, event):
+        """Handle deny button click."""
+        if self.pending_request_id:
+            import requests
+            try:
+                requests.post('http://127.0.0.1:8006/safety/deny', 
+                            json={'id': self.pending_request_id}, timeout=1)
+            except:
+                pass
+            self.hide_approval_request()
+    
+    def _on_always_approve_clicked(self, event):
+        """Handle always approve - turns off safe mode."""
+        import requests
+        try:
+            # Turn off safe mode
+            requests.post('http://127.0.0.1:8006/safety/mode', 
+                        json={'enabled': False}, timeout=1)
+            # Approve current request
+            if self.pending_request_id:
+                requests.post('http://127.0.0.1:8006/safety/approve', 
+                            json={'id': self.pending_request_id}, timeout=1)
+        except:
+            pass
+        self.hide_approval_request()
+    
     def set_idle(self):
         """Set overlay to idle state."""
         if self.status_label:
@@ -432,6 +556,18 @@ def show_action(action: str):
     overlay = get_overlay()
     overlay.set_active()
     overlay.update_action(action)
+
+
+def show_approval_request(request_id: str, command: str, params: dict):
+    """Show approval request in overlay."""
+    overlay = get_overlay()
+    overlay.show_approval_request(request_id, command, params)
+
+
+def hide_approval_request():
+    """Hide approval request from overlay."""
+    overlay = get_overlay()
+    overlay.hide_approval_request()
 
 
 def is_stopped() -> bool:

@@ -60,6 +60,152 @@ except:
     pass  # May fail if no event loop yet, that's OK
 
 # ============================================
+# RESOURCES API (Desktop Data)
+# ============================================
+
+@mcp.resource("desktop://screenshot/latest")
+async def get_latest_screenshot() -> str:
+    """Get the most recent screenshot as base64 data."""
+    result = await relay_command(None, "screenshot", {})
+    if "image" in result:
+        return f"data:image/png;base64,{result['image']}"
+    return "Screenshot not available"
+
+@mcp.resource("desktop://windows")
+async def get_windows_list() -> str:
+    """Get list of all open windows."""
+    result = await relay_command(None, "get_desktop_state", {})
+    if "windows" in result:
+        import json
+        return json.dumps(result["windows"], indent=2)
+    return "No windows data available"
+
+@mcp.resource("desktop://logs")
+async def get_agent_logs() -> str:
+    """Get recent agent command logs."""
+    agents = agent_storage.get_all()
+    if not agents:
+        return "No agents connected"
+    
+    agent_id = list(agents.keys())[0]
+    agent = agents[agent_id]
+    callback_url = agent["callback_url"]
+    
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(f"{callback_url}/logs")
+            return response.text
+    except:
+        return "Logs unavailable"
+
+@mcp.resource("file:///{path}")
+async def get_file_content(path: str) -> str:
+    """Read content of a file from the desktop."""
+    result = await relay_command(None, "file_read", {"path": path})
+    if "content" in result:
+        return result["content"]
+    return f"Error reading file: {result.get('error', 'Unknown error')}"
+
+@mcp.resource("desktop://session/context")
+async def get_session_context() -> str:
+    """Get recent session history and context."""
+    agents = agent_storage.get_all()
+    if not agents:
+        return "No agents connected"
+    
+    agent_id = list(agents.keys())[0]
+    agent = agents[agent_id]
+    callback_url = agent["callback_url"]
+    
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(f"{callback_url}/session/context")
+            data = response.json()
+            return data.get("summary", "No session context available")
+    except:
+        return "Session context unavailable"
+
+# ============================================
+# PROMPTS API (Workflow Templates)
+# ============================================
+
+@mcp.prompt()
+async def automate_desktop_task(task_description: str = "") -> str:
+    """Help user automate a desktop task step-by-step."""
+    return f"""You are controlling a Windows PC through Bridge MCP.
+
+Task: {task_description or "User will describe the task"}
+
+Available capabilities:
+- screenshot() - See the screen
+- click(x, y) - Click at coordinates
+- type_text(text) - Type text
+- browser_navigate(url) - Open URLs with Playwright
+- browser_click(selector) - Click web elements
+- get_desktop_state() - See open windows
+- run_powershell(cmd) - Execute commands (requires approval)
+
+Instructions:
+1. Take a screenshot first to see the current state
+2. Break the task into clear steps
+3. Execute each step and verify success
+4. If uncertain, ask the user for clarification
+
+Begin by taking a screenshot and analyzing what needs to be done."""
+
+@mcp.prompt()
+async def debug_error(error_message: str = "") -> str:
+    """Help debug an error message or problem."""
+    return f"""You are a debugging assistant with access to a Windows PC.
+
+Error/Problem: {error_message or "User will describe the error"}
+
+Available tools:
+- screenshot() - See the current screen
+- get_desktop_state() - List open applications
+- file_read(path) - Read log files
+- run_powershell(cmd) - Run diagnostic commands
+
+Debugging approach:
+1. Gather information about the error
+2. Check relevant logs or files
+3. Identify the root cause
+4.  Suggest or implement a fix
+5. Verify the fix worked
+
+Start by taking a screenshot to see the current state."""
+
+@mcp.prompt()
+async def web_automation(task: str = "", url: str = ""):
+    """Automate a web task using Playwright."""
+    return f"""You are automating a web browser task.
+
+URL: {url or "User will provide"}
+Task: {task or "User will describe"}
+
+Playwright tools available:
+- browser_navigate(url) - Go to a page
+- browser_click(selector) - Click elements (use CSS selectors)
+- browser_type(selector, text) - Fill forms
+- browser_press(key) - Press keys like 'Enter'
+- browser_content() - Read page text
+- browser_screenshot() - Capture current page
+
+Workflow:
+1. Navigate to {url or 'the target URL'}
+2. Wait for page load (1-2 seconds)
+3. Find and interact with elements using CSS selectors
+4. Verify success with screenshots or content checks
+
+CSS selector tips:
+- #id - for IDs
+- .class - for classes
+- button[type="submit"] - for specific attributes
+- Use browser dev tools to find selectors
+
+Begin by navigating to the URL."""
+
+# ============================================
 # AGENT REGISTRATION (PERSISTENT)
 # ============================================
 

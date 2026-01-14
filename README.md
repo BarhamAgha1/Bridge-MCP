@@ -145,6 +145,30 @@ See what the AI sees, in real-time:
 - **Semantic Overlay:** Green bounding boxes highlight every button, link, and window the AI detects.
 - **Debug Instantly:** Visual confirmation that the AI has found the correct "Submit" button.
 
+## 📚 Full MCP Specification Support
+
+Bridge MCP now implements the complete Model Context Protocol specification:
+
+### Resources API
+Expose desktop data as addressable resources:
+- `desktop://screenshot/latest` - Current screenshot
+- `desktop://windows` - Open windows list
+- `desktop://logs` - Agent command logs
+- `file:///{path}` - Read any desktop file
+- `desktop://session/context` - Recent session history
+
+### Prompts API
+Pre-built workflow templates for one-click automation:
+- `automate_desktop_task` - Step-by-step task automation
+- `debug_error` - Interactive error debugging
+- `web_automation` - Playwright web workflows
+
+### Session Memory
+Never lose context:
+- Stores last 100 commands across restarts
+- Provides AI with recent session history
+- Enables "continue where I left off" workflows
+
 ---
 
 ## 🚀 Quick Start

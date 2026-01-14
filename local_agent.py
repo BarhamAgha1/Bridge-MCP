@@ -457,6 +457,67 @@ async def handle_stream(request):
     return response
 
 # ============================================
+# SESSION MEMORY (Command History)
+# ============================================
+
+import json
+from pathlib import Path
+from collections import deque
+
+class SessionMemory:
+    def __init__(self, max_size=100):
+        self.history_file = Path.home() / 'AppData' / 'Roaming' / 'bridge-mcp' / 'session_history.json'
+        self.history_file.parent.mkdir(parents=True, exist_ok=True)
+        self.history = deque(maxlen=max_size)
+        self._load()
+    
+    def _load(self):
+        """Load history from file."""
+        if self.history_file.exists():
+            try:
+                with open(self.history_file, 'r') as f:
+                    data = json.load(f)
+                    self.history = deque(data, maxlen=100)
+            except:
+                pass
+    
+    def _save(self):
+        """Save history to file."""
+        try:
+            with open(self.history_file, 'w') as f:
+                json.dump(list(self.history), f, indent=2)
+        except:
+            pass
+    
+    def add(self, command: str, params: dict, result: dict):
+        """Add command to history."""
+        import time
+        self.history.append({
+            "timestamp": time.time(),
+            "command": command,
+            "params": params,
+            "result": str(result)[:200]  # Truncate
+        })
+        self._save()
+    
+    def get_recent(self, count=10):
+        """Get recent commands."""
+        return list(self.history)[-count:]
+    
+    def get_context_summary(self):
+        """Get a summary of recent session for context."""
+        recent = self.get_recent(5)
+        if not recent:
+            return "No previous session context."
+        
+        summary = "Recent session history:\n"
+        for entry in recent:
+            summary += f"- {entry['command']}: {entry.get('result', 'N/A')[:50]}\n"
+        return summary
+
+session_memory = SessionMemory()
+
+# ============================================
 # HTTP SERVER & LOGGING
 # ============================================
 
@@ -517,8 +578,18 @@ class CommandGuard:
         
         print(f"[Safety] Blocking command '{command}' - Waiting for approval ({request_id})")
         
+        # Show in AI Overlay
+        if HAS_OVERLAY:
+            from ai_overlay import show_approval_request
+            show_approval_request(request_id, command, params)
+        
         # Wait for approval
         await event.wait()
+        
+        # Hide from overlay
+        if HAS_OVERLAY:
+            from ai_overlay import hide_approval_request
+            hide_approval_request()
         
         status = self.pending_requests[request_id]["status"]
         del self.pending_requests[request_id]
@@ -629,6 +700,9 @@ async def handle_execute(request):
         result = COMMANDS[command](params)
         if asyncio.iscoroutine(result):
             result = await result
+        
+        # Record in session memory
+        session_memory.add(command, params, result)
             
         log_command(command, result=str(result)[:200] + "..." if len(str(result)) > 200 else result)
         return web.json_response(result)
@@ -685,6 +759,12 @@ async def main():
     
     # Stream Route
     app.router.add_get("/stream", handle_stream)
+    
+    # Session Route
+    app.router.add_get("/session/context", lambda req: web.json_response({
+        "recent": session_memory.get_recent(10),
+        "summary": session_memory.get_context_summary()
+    }))
     
     # Dashboard Routes
     app.router.add_get("/", handle_index)
