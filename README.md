@@ -1,5 +1,3 @@
-<div align="center">
-
 # 🌉 Bridge MCP
 
 ### Universal PC Control for Any AI
@@ -11,13 +9,7 @@
 
 **Give any AI complete control over your Windows PC**
 
-[Features](#-features) • [Installation](#-installation) • [Tools](#-available-tools) • [Usage](#-usage) • [Deploy](#-fastmcp-cloud) • [Contributing](#-contributing)
-
----
-
-<img src="assets/demo.gif" alt="Bridge MCP Demo" width="600">
-
-</div>
+[Features](#-features) • [Quick Start](#-quick-start) • [Configuration](#-configuration) • [Tools](#-available-tools) • [Troubleshooting](#-troubleshooting) • [Contributing](#-contributing)
 
 ---
 
@@ -25,12 +17,12 @@
 
 Bridge MCP is a **Model Context Protocol (MCP)** server that gives **any AI** full control over a Windows PC. Whether you're using Claude, ChatGPT, Cursor, Gemini, or any other MCP-compatible AI, Bridge MCP lets you:
 
-- 🖥️ **Control Applications** - Launch, switch, resize, close any app
-- 🖱️ **Automate Input** - Mouse clicks, keyboard typing, hotkeys, scrolling
-- 📸 **See the Screen** - Screenshots, UI element detection, desktop state
-- 🌐 **Browse the Web** - Full Chrome automation and control
-- ⚡ **Run Commands** - PowerShell, CMD, file operations
-- 📋 **Manage Clipboard** - Copy, paste, clear
+* 🖥️ **Control Applications** - Launch, switch, resize, close any app
+* 🖱️ **Automate Input** - Mouse clicks, keyboard typing, hotkeys, scrolling
+* 📸 **See the Screen** - Screenshots, UI element detection, desktop state
+* 🌐 **Browse the Web** - Full Chrome automation and control
+* ⚡ **Run Commands** - PowerShell, CMD, file operations
+* 📋 **Manage Clipboard** - Copy, paste, clear
 
 > **Think of it as giving your AI eyes and hands to control your computer!**
 
@@ -39,7 +31,7 @@ Bridge MCP is a **Model Context Protocol (MCP)** server that gives **any AI** fu
 ## ✨ Features
 
 | Category | Tools | Description |
-|----------|-------|-------------|
+| --- | --- | --- |
 | 🚀 **App Control** | 8 tools | Launch, switch, close, resize, minimize, maximize applications |
 | 🖱️ **Mouse & Keyboard** | 10 tools | Click, type, hotkeys, scroll, drag, move cursor |
 | 📸 **Screen Capture** | 7 tools | Screenshots, desktop state, find UI elements |
@@ -55,52 +47,58 @@ Bridge MCP is a **Model Context Protocol (MCP)** server that gives **any AI** fu
 ## 🏗️ Architecture
 
 Bridge MCP uses a **Relay Architecture** to work across platforms:
-
 ```
 ┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐
-│    Any AI       │         │  FastMCP Cloud  │         │  Your Windows   │
-│  (Claude, etc.) │◄───────►│  (Cloud Relay)  │◄───────►│  PC (Agent)     │
-└─────────────────┘  HTTPS  └─────────────────┘   HTTP  └─────────────────┘
+│    Any AI       │         │  Cloud Relay    │         │  Your Windows   │
+│  (Claude, etc.) │◄───────►│  (bridge_mcp)   │◄───────►│  PC (Agent)     │
+└─────────────────┘         └─────────────────┘         └─────────────────┘
 ```
 
-- **Cloud Relay**: Runs on FastMCP Cloud (Linux), routes commands
-- **Local Agent**: Runs on your Windows PC, executes commands
+* **bridge_mcp.py** - MCP server (runs locally or on FastMCP Cloud)
+* **local_agent.py** - HTTP server on your PC that executes commands (port 8006)
+
+---
 
 ## 🚀 Quick Start
 
-### Step 1: Run Local Agent on Your Windows PC
-
+### Step 1: Clone the Repository
 ```bash
 git clone https://github.com/BarhamAgha1/Bridge-MCP.git
 cd Bridge-MCP
+```
+
+### Step 2: Install Dependencies
+```bash
 pip install -r requirements-local.txt
+```
+
+### Step 3: Start the Local Agent
+```bash
 python local_agent.py
 ```
 
-🎉 **New:** Open `http://localhost:8006` to see your **Live Dashboard**!
-
-### Step 2: Expose Your Agent (for remote access)
-
-Option A - Using ngrok:
-```bash
-ngrok http 8006
+Keep this terminal open! The agent will display:
+```
+Bridge MCP Local Agent running on http://127.0.0.1:8006
 ```
 
-Option B - Port forwarding on your router (advanced)
+### Step 4: Configure Your AI Client
 
-### Step 3: Register Your Agent
+See [Configuration](#-configuration) below for Claude Desktop, Cursor, or VS Code setup.
 
-In your AI conversation with Bridge MCP:
+### Step 5: Register Your Agent
+
+In your AI conversation, register the local agent:
 ```
 Use register_agent with:
 - agent_id: "my-pc"
-- callback_url: "https://xxxx.ngrok.io" (from ngrok)
+- callback_url: "http://127.0.0.1:8006"
 - agent_name: "My Windows PC"
 ```
 
-### Step 4: Start Controlling!
+### Step 6: Start Controlling!
 
-Now use any tool like `screenshot()`, `click()`, `type_text()`, etc.
+Now use any tool like `screenshot()`, `click(100, 200)`, `type_text("Hello")`, `app_launch("notepad")`, etc.
 
 ---
 
@@ -108,37 +106,54 @@ Now use any tool like `screenshot()`, `click()`, `type_text()`, etc.
 
 ### Claude Desktop
 
-Add to `%APPDATA%\Claude\claude_desktop_config.json`:
+1. Open the config file at `%APPDATA%\Claude\claude_desktop_config.json`
 
+2. Add Bridge MCP:
 ```json
 {
   "mcpServers": {
     "bridge-mcp": {
       "command": "python",
-      "args": ["path/to/Bridge-MCP/bridge_mcp.py"]
+      "args": ["C:\\Users\\YourName\\Path\\To\\Bridge-MCP\\bridge_mcp.py"]
     }
   }
 }
 ```
 
+⚠️ **Important:** Replace the path with the **actual location** where you cloned the repository!
+
+**Example paths:**
+- `C:\\Users\\PC\\Desktop\\Bridge-MCP\\bridge_mcp.py`
+- `D:\\Projects\\Bridge-MCP\\bridge_mcp.py`
+
+3. **Restart Claude Desktop completely** (close and reopen)
+
 ### Cursor
 
-Add to your MCP settings in Cursor preferences with the same configuration.
+Add to your MCP settings in Cursor preferences with the same configuration format.
 
 ### VS Code + Claude Code
 
 Create `.vscode/mcp.json` in your project:
-
 ```json
 {
   "mcpServers": {
     "bridge-mcp": {
       "command": "python",
-      "args": ["path/to/Bridge-MCP/bridge_mcp.py"]
+      "args": ["C:\\Users\\YourName\\Path\\To\\Bridge-MCP\\bridge_mcp.py"]
     }
   }
 }
 ```
+
+### Remote Access (Optional)
+
+To control your PC from anywhere, expose the local agent with ngrok:
+```bash
+ngrok http 8006
+```
+
+Then use the ngrok URL (e.g., `https://xxxx.ngrok.io`) as your callback_url when registering.
 
 ---
 
@@ -148,15 +163,11 @@ Create `.vscode/mcp.json` in your project:
 <summary><b>🚀 App Control Tools</b></summary>
 
 | Tool | Description | Example |
-|------|-------------|---------|
+| --- | --- | --- |
 | `app_launch` | Launch an application | `app_launch("notepad")` |
 | `app_switch` | Switch to open app | `app_switch("Chrome")` |
 | `app_close` | Close an application | `app_close("notepad")` |
 | `app_list` | List all open apps | `app_list()` |
-| `app_resize` | Resize app window | `app_resize("notepad", 800, 600)` |
-| `app_minimize` | Minimize app | `app_minimize("Chrome")` |
-| `app_maximize` | Maximize app | `app_maximize("Chrome")` |
-| `app_move` | Move app window | `app_move("notepad", 100, 100)` |
 
 </details>
 
@@ -164,14 +175,13 @@ Create `.vscode/mcp.json` in your project:
 <summary><b>🖱️ Input Tools (Mouse & Keyboard)</b></summary>
 
 | Tool | Description | Example |
-|------|-------------|---------|
+| --- | --- | --- |
 | `click` | Click at coordinates | `click(500, 300)` |
 | `double_click` | Double-click | `double_click(500, 300)` |
 | `right_click` | Right-click | `right_click(500, 300)` |
 | `type_text` | Type text | `type_text("Hello World!")` |
-| `type_at` | Click and type | `type_at(500, 300, "Hello")` |
 | `press_key` | Press a key | `press_key("enter")` |
-| `hotkey` | Keyboard shortcut | `hotkey("ctrl", "c")` |
+| `hotkey` | Keyboard shortcut | `hotkey("ctrl,c")` |
 | `scroll` | Scroll | `scroll("down", 3)` |
 | `drag` | Drag and drop | `drag(100, 100, 500, 500)` |
 | `move_mouse` | Move cursor | `move_mouse(500, 300)` |
@@ -182,14 +192,11 @@ Create `.vscode/mcp.json` in your project:
 <summary><b>📸 Screen Tools</b></summary>
 
 | Tool | Description | Example |
-|------|-------------|---------|
+| --- | --- | --- |
 | `screenshot` | Take screenshot | `screenshot()` |
 | `get_desktop_state` | Get full desktop state | `get_desktop_state()` |
 | `get_screen_size` | Get screen dimensions | `get_screen_size()` |
 | `get_mouse_position` | Get cursor position | `get_mouse_position()` |
-| `find_element` | Find UI element | `find_element("Submit")` |
-| `get_pixel_color` | Get pixel color | `get_pixel_color(500, 300)` |
-| `wait_for_element` | Wait for element | `wait_for_element("OK", 10)` |
 
 </details>
 
@@ -197,15 +204,12 @@ Create `.vscode/mcp.json` in your project:
 <summary><b>⚡ System Tools</b></summary>
 
 | Tool | Description | Example |
-|------|-------------|---------|
+| --- | --- | --- |
 | `run_powershell` | Run PowerShell | `run_powershell("Get-Process")` |
 | `run_cmd` | Run CMD command | `run_cmd("dir")` |
 | `file_read` | Read file | `file_read("C:/test.txt")` |
 | `file_write` | Write file | `file_write("C:/test.txt", "Hello")` |
 | `file_list` | List directory | `file_list("C:/Users")` |
-| `file_exists` | Check if exists | `file_exists("C:/test.txt")` |
-| `get_system_info` | System information | `get_system_info()` |
-| `notification` | Show notification | `notification("Title", "Message")` |
 
 </details>
 
@@ -213,20 +217,9 @@ Create `.vscode/mcp.json` in your project:
 <summary><b>🌐 Browser Tools (Chrome)</b></summary>
 
 | Tool | Description | Example |
-|------|-------------|---------|
+| --- | --- | --- |
 | `chrome_open` | Open Chrome | `chrome_open("https://google.com")` |
-| `chrome_new_tab` | New tab | `chrome_new_tab("https://github.com")` |
-| `chrome_close_tab` | Close tab | `chrome_close_tab()` |
 | `chrome_navigate` | Go to URL | `chrome_navigate("https://example.com")` |
-| `chrome_back` | Go back | `chrome_back()` |
-| `chrome_forward` | Go forward | `chrome_forward()` |
-| `chrome_refresh` | Refresh page | `chrome_refresh()` |
-| `chrome_get_url` | Get current URL | `chrome_get_url()` |
-| `chrome_get_tabs` | List all tabs | `chrome_get_tabs()` |
-| `chrome_switch_tab` | Switch tab | `chrome_switch_tab(2)` |
-| `chrome_search` | Google search | `chrome_search("Bridge MCP")` |
-| `chrome_scroll` | Scroll page | `chrome_scroll("down", 5)` |
-| `scrape_page` | Scrape page | `scrape_page()` |
 
 </details>
 
@@ -234,10 +227,9 @@ Create `.vscode/mcp.json` in your project:
 <summary><b>📋 Clipboard Tools</b></summary>
 
 | Tool | Description | Example |
-|------|-------------|---------|
+| --- | --- | --- |
 | `clipboard_copy` | Copy to clipboard | `clipboard_copy("Hello")` |
 | `clipboard_paste` | Get clipboard | `clipboard_paste()` |
-| `clipboard_clear` | Clear clipboard | `clipboard_clear()` |
 
 </details>
 
@@ -246,7 +238,6 @@ Create `.vscode/mcp.json` in your project:
 ## 💡 Usage Examples
 
 ### Example 1: Open Notepad and Write Text
-
 ```
 User: Open notepad and write "Hello from AI!"
 
@@ -256,8 +247,7 @@ AI uses:
 3. type_text("Hello from AI!")
 ```
 
-### Example 2: Take a Screenshot and Describe It
-
+### Example 2: Take a Screenshot
 ```
 User: What's on my screen right now?
 
@@ -266,72 +256,70 @@ AI uses:
 2. [AI analyzes the image and describes what it sees]
 ```
 
-### Example 3: Search Something on Google
-
+### Example 3: Search on Google
 ```
-User: Search for "FastMCP documentation" on Google
+User: Search for "Bridge MCP" on Google
 
 AI uses:
-1. chrome_open()
-2. chrome_navigate("https://google.com")
-3. type_text("FastMCP documentation")
-4. press_key("enter")
-```
-
-### Example 4: Automate a Form
-
-```
-User: Fill out the login form with username "test" and password "123"
-
-AI uses:
-1. screenshot() - to see the form
-2. find_element("Username")
-3. click(x, y)
-4. type_text("test")
-5. press_key("tab")
-6. type_text("123")
-7. find_element("Login")
-8. click(x, y)
+1. chrome_open("https://google.com")
+2. type_text("Bridge MCP")
+3. press_key("enter")
 ```
 
 ---
 
-## ☁️ FastMCP Cloud
+## 🔧 Troubleshooting
 
-Bridge MCP is designed to be deployed on [FastMCP Cloud](https://fastmcp.cloud) for easy access:
+### Claude Desktop shows "Server disconnected"
 
-1. **Fork this repository**
-2. **Go to** [fastmcp.cloud](https://fastmcp.cloud)
-3. **Sign in** with GitHub
-4. **Create project** from your forked repo
-5. **Set entrypoint:** `bridge_mcp.py`
-6. **Deploy!**
+1. **Check the path** - Make sure the path in your config points to the actual `bridge_mcp.py` file. The path must be absolute and use double backslashes (`\\`) in JSON.
+
+2. **Test manually** - Open Command Prompt and run:
+```cmd
+   cd "C:\path\to\Bridge-MCP"
+   python bridge_mcp.py
+```
+   It should stay running (not exit immediately). Press Ctrl+C to stop.
+
+3. **Install dependencies**:
+```cmd
+   pip install fastmcp httpx
+```
+
+4. **Restart Claude Desktop** - Fully close and reopen after any config changes.
+
+### Local agent not receiving commands
+
+1. Make sure `local_agent.py` is running in a terminal (keep it open!)
+2. Verify the callback URL is correct when registering the agent
+3. For local use: `http://127.0.0.1:8006`
+4. For remote access: Use ngrok (`ngrok http 8006`) and use the ngrok URL
+
+### "No agents connected" error
+
+You need to register your local agent first:
+```
+register_agent("my-pc", "http://127.0.0.1:8006", "My PC")
+```
+
+### Unicode/Emoji errors on Windows
+
+If `local_agent.py` crashes with Unicode errors, the terminal may not support emojis. This has been fixed in the latest version.
+
+---
+
+## ☁️ FastMCP Cloud Deployment
+
+Bridge MCP can be deployed on [FastMCP Cloud](https://fastmcp.cloud) for easy access:
+
+1. Fork this repository
+2. Go to [fastmcp.cloud](https://fastmcp.cloud)
+3. Sign in with GitHub
+4. Create project from your forked repo
+5. Set entrypoint: `bridge_mcp.py`
+6. Deploy!
 
 Your MCP will be available at: `https://your-project.fastmcp.app/mcp`
-
----
-
-## 🏗️ Project Structure
-
-```
-Bridge-MCP/
-├── bridge_mcp.py          # Main FastMCP server
-├── tools/
-│   ├── __init__.py
-│   ├── app_tools.py       # App control tools
-│   ├── input_tools.py     # Mouse & keyboard tools
-│   ├── screen_tools.py    # Screenshot & vision tools
-│   ├── system_tools.py    # PowerShell & file tools
-│   ├── browser_tools.py   # Chrome automation tools
-│   └── clipboard_tools.py # Clipboard tools
-├── utils/
-│   ├── __init__.py
-│   └── helpers.py         # Utility functions
-├── requirements.txt       # Python dependencies
-├── pyproject.toml         # Project configuration
-├── LICENSE                # MIT License
-└── README.md              # This file
-```
 
 ---
 
@@ -347,13 +335,12 @@ Contributions are welcome! Here's how you can help:
 
 ### Ideas for Contributions
 
-- [ ] Add more browser support (Firefox, Edge)
-- [ ] Add Linux support
-- [ ] Add macOS support
-- [ ] Add more automation tools
-- [ ] Improve UI element detection
-- [ ] Add OCR capabilities
-- [ ] Add voice control integration
+* Add more browser support (Firefox, Edge)
+* Add Linux support
+* Add macOS support
+* Add more automation tools
+* Improve UI element detection
+* Add OCR capabilities
 
 ---
 
@@ -365,9 +352,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [FastMCP](https://fastmcp.cloud) - The amazing MCP framework
-- [Anthropic](https://anthropic.com) - For creating the MCP protocol
-- [UIAutomation](https://github.com/yinkaisheng/Python-UIAutomation-for-Windows) - Windows UI automation
+* [FastMCP](https://fastmcp.cloud) - The amazing MCP framework
+* [Anthropic](https://anthropic.com) - For creating the MCP protocol
 
 ---
 
@@ -375,14 +361,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Barham Agha**
 
-- GitHub: [@BarhamAgha1](https://github.com/BarhamAgha1)
+* GitHub: [@BarhamAgha1](https://github.com/BarhamAgha1)
 
 ---
-
-<div align="center">
 
 **⭐ If you find this project useful, please give it a star! ⭐**
 
 Made with ❤️ for the AI community
-
-</div>
