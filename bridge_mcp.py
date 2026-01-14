@@ -37,16 +37,16 @@ mcp.tool(app_tools.app_list)
 # INPUT TOOLS (Mouse & Keyboard)
 # ============================================
 
-# mcp.tool(input_tools.click)
-# mcp.tool(input_tools.double_click)
-# mcp.tool(input_tools.right_click)
-# mcp.tool(input_tools.type_text)
-# mcp.tool(input_tools.type_at)
-# mcp.tool(input_tools.press_key)
-# mcp.tool(input_tools.hotkey)
-# mcp.tool(input_tools.scroll)
-# mcp.tool(input_tools.drag)
-# mcp.tool(input_tools.move_mouse)
+mcp.tool(input_tools.click)
+mcp.tool(input_tools.double_click)
+mcp.tool(input_tools.right_click)
+mcp.tool(input_tools.type_text)
+mcp.tool(input_tools.type_at)
+mcp.tool(input_tools.press_key)
+mcp.tool(input_tools.hotkey)
+mcp.tool(input_tools.scroll)
+mcp.tool(input_tools.drag)
+mcp.tool(input_tools.move_mouse)
 
 # ============================================
 # SCREEN TOOLS
@@ -81,22 +81,22 @@ mcp.tool(system_tools.notification)
 # BROWSER/CHROME TOOLS
 # ============================================
 
-# mcp.tool(browser_tools.chrome_open)
-# mcp.tool(browser_tools.chrome_new_tab)
-# mcp.tool(browser_tools.chrome_close_tab)
-# mcp.tool(browser_tools.chrome_navigate)
-# mcp.tool(browser_tools.chrome_back)
-# mcp.tool(browser_tools.chrome_forward)
-# mcp.tool(browser_tools.chrome_refresh)
-# mcp.tool(browser_tools.chrome_get_url)
-# mcp.tool(browser_tools.chrome_get_tabs)
-# mcp.tool(browser_tools.chrome_switch_tab)
-# mcp.tool(browser_tools.chrome_search)
-# mcp.tool(browser_tools.chrome_scroll)
-# mcp.tool(browser_tools.chrome_click_element)
-# mcp.tool(browser_tools.chrome_fill_input)
-# mcp.tool(browser_tools.chrome_get_page_text)
-# mcp.tool(browser_tools.scrape_page)
+mcp.tool(browser_tools.chrome_open)
+mcp.tool(browser_tools.chrome_new_tab)
+mcp.tool(browser_tools.chrome_close_tab)
+mcp.tool(browser_tools.chrome_navigate)
+mcp.tool(browser_tools.chrome_back)
+mcp.tool(browser_tools.chrome_forward)
+mcp.tool(browser_tools.chrome_refresh)
+mcp.tool(browser_tools.chrome_get_url)
+mcp.tool(browser_tools.chrome_get_tabs)
+mcp.tool(browser_tools.chrome_switch_tab)
+mcp.tool(browser_tools.chrome_search)
+mcp.tool(browser_tools.chrome_scroll)
+mcp.tool(browser_tools.chrome_click_element)
+mcp.tool(browser_tools.chrome_fill_input)
+mcp.tool(browser_tools.chrome_get_page_text)
+mcp.tool(browser_tools.scrape_page)
 
 # ============================================
 # CLIPBOARD TOOLS
@@ -180,11 +180,11 @@ def take_action_sequence(actions: list) -> list:
             
     return results
 
-# mcp.tool(wait)
-# mcp.tool(alert)
-# mcp.tool(input_dialog)
-# mcp.tool(confirm_dialog)
-# mcp.tool(take_action_sequence)
+mcp.tool(wait)
+mcp.tool(alert)
+mcp.tool(input_dialog)
+mcp.tool(confirm_dialog)
+mcp.tool(take_action_sequence)
 
 
 
