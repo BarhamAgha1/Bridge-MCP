@@ -56,14 +56,15 @@ def press_key(key: str) -> str:
     except Exception as e:
         return f"Error pressing key: {str(e)}"
 
-def hotkey(*keys: str) -> str:
-    """Press a keyboard shortcut (e.g., hotkey('ctrl', 'c') for copy)"""
+def hotkey(keys: str) -> str:
+    """Press a keyboard shortcut (e.g., hotkey('ctrl,c') for copy)"""
     try:
-        pyautogui.hotkey(*keys)
-        return f"Pressed hotkey: {'+'.join(keys)}"
+        key_list = [k.strip() for k in keys.split(',')]
+        pyautogui.hotkey(*key_list)
+        return f"Pressed hotkey: {'+'.join(key_list)}"
     except Exception as e:
-        # Fix for when *keys comes as a tuple/list if called incorrectly
         return f"Error pressing hotkey: {str(e)}"
+
 
 def scroll(direction: str, amount: int = 3, x: int = None, y: int = None) -> str:
     """Scroll up/down/left/right at current or specified position"""

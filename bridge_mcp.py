@@ -16,11 +16,9 @@ from io import BytesIO
 from tools import app_tools, input_tools, screen_tools, system_tools, browser_tools, clipboard_tools
 
 # Initialize FastMCP server
-mcp = FastMCP(
-    name="Bridge MCP",
-    version="1.0.0",
-    description="Universal PC control MCP - Give any AI full control over Windows"
-)
+mcp = FastMCP("Bridge MCP")
+
+
 
 # ============================================
 # APP CONTROL TOOLS
@@ -39,16 +37,16 @@ mcp.tool(app_tools.app_list)
 # INPUT TOOLS (Mouse & Keyboard)
 # ============================================
 
-mcp.tool(input_tools.click)
-mcp.tool(input_tools.double_click)
-mcp.tool(input_tools.right_click)
-mcp.tool(input_tools.type_text)
-mcp.tool(input_tools.type_at)
-mcp.tool(input_tools.press_key)
-mcp.tool(input_tools.hotkey)
-mcp.tool(input_tools.scroll)
-mcp.tool(input_tools.drag)
-mcp.tool(input_tools.move_mouse)
+# mcp.tool(input_tools.click)
+# mcp.tool(input_tools.double_click)
+# mcp.tool(input_tools.right_click)
+# mcp.tool(input_tools.type_text)
+# mcp.tool(input_tools.type_at)
+# mcp.tool(input_tools.press_key)
+# mcp.tool(input_tools.hotkey)
+# mcp.tool(input_tools.scroll)
+# mcp.tool(input_tools.drag)
+# mcp.tool(input_tools.move_mouse)
 
 # ============================================
 # SCREEN TOOLS
@@ -61,6 +59,9 @@ mcp.tool(screen_tools.get_desktop_state)
 mcp.tool(screen_tools.find_element)
 mcp.tool(screen_tools.get_pixel_color)
 mcp.tool(screen_tools.wait_for_element)
+
+
+
 
 # ============================================
 # SYSTEM TOOLS
@@ -80,22 +81,22 @@ mcp.tool(system_tools.notification)
 # BROWSER/CHROME TOOLS
 # ============================================
 
-mcp.tool(browser_tools.chrome_open)
-mcp.tool(browser_tools.chrome_new_tab)
-mcp.tool(browser_tools.chrome_close_tab)
-mcp.tool(browser_tools.chrome_navigate)
-mcp.tool(browser_tools.chrome_back)
-mcp.tool(browser_tools.chrome_forward)
-mcp.tool(browser_tools.chrome_refresh)
-mcp.tool(browser_tools.chrome_get_url)
-mcp.tool(browser_tools.chrome_get_tabs)
-mcp.tool(browser_tools.chrome_switch_tab)
-mcp.tool(browser_tools.chrome_search)
-mcp.tool(browser_tools.chrome_scroll)
-mcp.tool(browser_tools.chrome_click_element)
-mcp.tool(browser_tools.chrome_fill_input)
-mcp.tool(browser_tools.chrome_get_page_text)
-mcp.tool(browser_tools.scrape_page)
+# mcp.tool(browser_tools.chrome_open)
+# mcp.tool(browser_tools.chrome_new_tab)
+# mcp.tool(browser_tools.chrome_close_tab)
+# mcp.tool(browser_tools.chrome_navigate)
+# mcp.tool(browser_tools.chrome_back)
+# mcp.tool(browser_tools.chrome_forward)
+# mcp.tool(browser_tools.chrome_refresh)
+# mcp.tool(browser_tools.chrome_get_url)
+# mcp.tool(browser_tools.chrome_get_tabs)
+# mcp.tool(browser_tools.chrome_switch_tab)
+# mcp.tool(browser_tools.chrome_search)
+# mcp.tool(browser_tools.chrome_scroll)
+# mcp.tool(browser_tools.chrome_click_element)
+# mcp.tool(browser_tools.chrome_fill_input)
+# mcp.tool(browser_tools.chrome_get_page_text)
+# mcp.tool(browser_tools.scrape_page)
 
 # ============================================
 # CLIPBOARD TOOLS
@@ -105,21 +106,23 @@ mcp.tool(clipboard_tools.clipboard_copy)
 mcp.tool(clipboard_tools.clipboard_paste)
 mcp.tool(clipboard_tools.clipboard_clear)
 
+
+
+
 # ============================================
 # UTILITY TOOLS & OTHERS
 # ============================================
+
 # NOTE: The user prompt asked for 'wait', 'alert', 'input_dialog', 'confirm_dialog', 'take_action_sequence'
 # I haven't implemented these in a dedicated module, but they are simple enough to add here or in helpers.
 # I will implement them inline here for simplicity as they are "new utility tools"
 
-@mcp.tool
 def wait(seconds: float) -> str:
     """Wait for specified seconds"""
     import time
     time.sleep(seconds)
     return f"Waited {seconds} seconds"
 
-@mcp.tool
 def alert(message: str) -> str:
     """Show an alert dialog box"""
     # Using pyautogui alert
@@ -130,7 +133,6 @@ def alert(message: str) -> str:
     except Exception as e:
         return f"Error showing alert: {str(e)}"
 
-@mcp.tool
 def input_dialog(prompt: str) -> str:
     """Show an input dialog and return user's response"""
     import pyautogui
@@ -140,7 +142,6 @@ def input_dialog(prompt: str) -> str:
     except Exception as e:
         return f"Error showing input dialog: {str(e)}"
 
-@mcp.tool
 def confirm_dialog(message: str) -> bool:
     """Show a yes/no confirmation dialog"""
     import pyautogui
@@ -150,7 +151,6 @@ def confirm_dialog(message: str) -> bool:
     except Exception as e:
         return False
 
-@mcp.tool
 def take_action_sequence(actions: list) -> list:
     """
     Execute a sequence of actions. Each action is a dict:
@@ -159,18 +159,11 @@ def take_action_sequence(actions: list) -> list:
     """
     results = []
     # This requires looking up the tool by name.
-    # We can iterate through mcp.tools or manually map.
-    # FastMCP doesn't expose a simple "call_tool_by_name" method publicly easily without client context,
-    # but we can map string names to our functions.
-    # For now, we'll support a limited set for safety or try to resolve.
-    # Actually, simpler to just say "Not fully implemented for security" or implement basic reflection if critical.
-    # I'll implement basic reflection for the tools we have imported.
     tool_map = {
         "click": input_tools.click,
         "type_text": input_tools.type_text,
         "wait": wait,
         "screenshot": screen_tools.screenshot
-        # Add more if needed
     }
     
     for action in actions:
@@ -186,6 +179,14 @@ def take_action_sequence(actions: list) -> list:
             results.append({"tool": tool_name, "status": "error", "error": "Tool not found or not allowed in sequence"})
             
     return results
+
+# mcp.tool(wait)
+# mcp.tool(alert)
+# mcp.tool(input_dialog)
+# mcp.tool(confirm_dialog)
+# mcp.tool(take_action_sequence)
+
+
 
 
 # ============================================
