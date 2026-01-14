@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bridge MCP Agent</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --bg-color: #0d1117;
@@ -17,7 +20,11 @@
             --error: #da3633;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -38,8 +45,17 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        h1 { font-weight: 600; font-size: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
-        .logo { color: var(--accent); }
+        h1 {
+            font-weight: 600;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo {
+            color: var(--accent);
+        }
 
         .status-badge {
             background: rgba(46, 160, 67, 0.15);
@@ -53,12 +69,28 @@
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .pulse {
-            width: 8px; height: 8px; background: var(--success); border-radius: 50%;
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
             animation: pulse 2s infinite;
         }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
 
         .grid {
             display: grid;
@@ -74,16 +106,33 @@
             padding: 1.5rem;
         }
 
-        h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-primary); }
+        h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
 
         .info-row {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 0.75rem 0;
             border-bottom: 1px solid var(--border-color);
         }
-        .info-row:last-child { border-bottom: none; }
-        .info-label { color: var(--text-secondary); font-size: 0.9rem; }
-        .info-value { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .info-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
 
         .copy-box {
             background: #0d1117;
@@ -98,11 +147,20 @@
             position: relative;
             word-break: break-all;
         }
-        .copy-box:hover { border-color: var(--accent); }
+
+        .copy-box:hover {
+            border-color: var(--accent);
+        }
+
         .copy-box::after {
             content: "Click to copy";
-            position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-            font-size: 0.75rem; color: var(--text-secondary); font-family: 'Inter', sans-serif;
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-family: 'Inter', sans-serif;
             opacity: 0.6;
         }
 
@@ -117,24 +175,160 @@
             font-size: 0.85rem;
         }
 
-        .log-entry { margin-bottom: 0.5rem; border-bottom: 1px solid rgba(48, 54, 61, 0.5); padding-bottom: 0.5rem; }
-        .log-time { color: var(--text-secondary); opacity: 0.7; margin-right: 0.75rem; }
-        .log-cmd { color: var(--accent); font-weight: bold; }
-        .log-result { color: var(--text-primary); display: block; margin-top: 0.25rem; white-space: pre-wrap; }
-        .log-error { color: var(--error); }
+        .log-entry {
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+            padding-bottom: 0.5rem;
+        }
+
+        .log-time {
+            color: var(--text-secondary);
+            opacity: 0.7;
+            margin-right: 0.75rem;
+        }
+
+        .log-cmd {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .log-result {
+            color: var(--text-primary);
+            display: block;
+            margin-top: 0.25rem;
+            white-space: pre-wrap;
+        }
+
+        .log-error {
+            color: var(--error);
+        }
 
         /* Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-color); }
-        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+
+        /* Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--success);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(16px);
+        }
+
+        /* Pending Request Item */
+        .pending-item {
+            background: rgba(218, 54, 51, 0.1);
+            border: 1px solid var(--error);
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .pending-cmd {
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .pending-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-approve {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-deny {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 </head>
+
 <body>
     <header>
         <h1><span class="logo">⚡</span> Bridge MCP Agent</h1>
         <div class="status-badge"><span class="pulse"></span> Online</div>
     </header>
+
+    <div class="grid">
+        <div class="card" style="grid-column: span 2;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>👁️ Terminator Vision (Live)</h2>
+                <div class="status-badge"
+                    style="background: rgba(88, 166, 255, 0.15); color: var(--accent); border-color: rgba(88, 166, 255, 0.4);">
+                    Seeing with Semantic UI
+                </div>
+            </div>
+            <div
+                style="position: relative; aspect-ratio: 16/9; background: #000; border-radius: 4px; overflow: hidden;">
+                <img src="/stream" style="width: 100%; height: 100%; object-fit: contain;" alt="Live Stream">
+            </div>
+        </div>
+    </div>
 
     <div class="grid">
         <div class="card">
@@ -158,10 +352,31 @@
         <div class="card">
             <h2>Quick Actions</h2>
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                <button onclick="testConnection()" style="padding: 0.5rem 1rem; background: var(--accent); border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: 500;">Test Pulse</button>
-                <button onclick="clearLogs()" style="padding: 0.5rem 1rem; background: transparent; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary); cursor: pointer;">Clear Logs</button>
+                <button onclick="testConnection()"
+                    style="padding: 0.5rem 1rem; background: var(--accent); border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: 500;">Test
+                    Pulse</button>
+                <button onclick="clearLogs()"
+                    style="padding: 0.5rem 1rem; background: transparent; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary); cursor: pointer;">Clear
+                    Logs</button>
             </div>
             <p id="test-result" style="margin-top: 1rem; font-size: 0.9rem; min-height: 1.5em;"></p>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>🛡️ Safety Sentinel</h2>
+                <label class="switch">
+                    <input type="checkbox" id="safe-mode-toggle" checked onchange="toggleSafeMode()">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <p id="safety-status" style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">Safe
+                Mode is Active</p>
+            <div id="pending-list" style="max-height: 200px; overflow-y: auto;">
+                <!-- Pending requests go here -->
+                <div style="text-align: center; color: var(--text-secondary); opacity: 0.6; padding: 1rem;">No pending
+                    approvals</div>
+            </div>
         </div>
     </div>
 
@@ -183,7 +398,7 @@
         const protocol = window.location.protocol;
         const host = window.location.host;
         const baseUrl = `${protocol}//${host}`;
-        
+
         document.getElementById('callback-url').innerText = baseUrl;
         document.getElementById('local-ip').innerText = host.split(':')[0];
 
@@ -220,10 +435,10 @@
             const term = document.getElementById('terminal');
             const div = document.createElement('div');
             div.className = 'log-entry';
-            
+
             const time = new Date(entry.timestamp * 1000).toLocaleTimeString();
             const resultClass = entry.status === 'error' ? 'log-error' : 'log-result';
-            
+
             div.innerHTML = `
                 <span class="log-time">${time}</span>
                 <span class="log-cmd">${entry.command}</span>
@@ -232,7 +447,64 @@
             term.prepend(div);
         }
 
-        // Poll for logs every 2 seconds
+        // Safety Functions
+        async function toggleSafeMode() {
+            const enabled = document.getElementById('safe-mode-toggle').checked;
+            await fetch('/safety/mode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled })
+            });
+            document.getElementById('safety-status').innerText = enabled ? 'Safe Mode is Active' : '⚠ Always Approve Mode';
+            document.getElementById('safety-status').style.color = enabled ? 'var(--text-secondary)' : 'var(--error)';
+        }
+
+        async function resolveRequest(id, action) {
+            await fetch(`/safety/${action}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            pollSafety(); // Refresh immediately
+        }
+
+        async function pollSafety() {
+            try {
+                const res = await fetch('/safety/pending');
+                const data = await res.json();
+
+                // Update Toggle if external change
+                const toggle = document.getElementById('safe-mode-toggle');
+                if (toggle.checked !== data.safe_mode) {
+                    toggle.checked = data.safe_mode;
+                    document.getElementById('safety-status').innerText = data.safe_mode ? 'Safe Mode is Active' : '⚠ Always Approve Mode';
+                    document.getElementById('safety-status').style.color = data.safe_mode ? 'var(--text-secondary)' : 'var(--error)';
+                }
+
+                // Render List
+                const list = document.getElementById('pending-list');
+                if (data.pending.length === 0) {
+                    list.innerHTML = '<div style="text-align: center; color: var(--text-secondary); opacity: 0.6; padding: 1rem;">No pending approvals</div>';
+                } else {
+                    list.innerHTML = data.pending.map(req => `
+                        <div class="pending-item">
+                            <span class="pending-cmd">${req.command}</span>
+                            <div style="font-size: 0.8rem; margin-bottom: 0.5rem; opacity: 0.8;">${JSON.stringify(req.params)}</div>
+                            <div class="pending-actions">
+                                <button class="btn-approve" onclick="resolveRequest('${req.id}', 'approve')">Approve</button>
+                                <button class="btn-deny" onclick="resolveRequest('${req.id}', 'deny')">Deny</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error("Safety poll error", e);
+            }
+        }
+
+        // Poll loops
+        setInterval(pollSafety, 1000);
+
         setInterval(async () => {
             try {
                 const res = await fetch('/logs');
@@ -250,4 +522,5 @@
         }, 2000);
     </script>
 </body>
+
 </html>

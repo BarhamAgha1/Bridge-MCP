@@ -397,6 +397,66 @@ COMMANDS = {
 }
 
 # ============================================
+# TERMINATOR VISION (Live Stream)
+# ============================================
+
+def get_overlay_frame():
+    """Capture screen and draw semantic overlay."""
+    try:
+        # 1. Capture Screen
+        img = pyautogui.screenshot()
+        
+        # 2. Draw Semantic Overlay (if uiautomation available)
+        if HAS_UIAUTOMATION:
+            from PIL import ImageDraw
+            draw = ImageDraw.Draw(img)
+            try:
+                # Get active window controls (simplify for speed)
+                active = auto.GetFocusedControl()
+                if active:
+                    # Draw active window
+                    r = active.BoundingRectangle
+                    draw.rectangle([r.left, r.top, r.right, r.bottom], outline="green", width=3)
+                    draw.text((r.left, r.top - 15), f"ACTIVE: {active.Name}", fill="green")
+                    
+                    # Draw children (simple depth 1)
+                    for child in active.GetChildren():
+                        if not child.IsOffscreen:
+                            r = child.BoundingRectangle
+                            if r.width > 0 and r.height > 0:
+                                draw.rectangle([r.left, r.top, r.right, r.bottom], outline="lawngreen", width=1)
+            except:
+                pass
+        
+        # 3. Convert to JPEG
+        buffer = BytesIO()
+        img.save(buffer, format="JPEG", quality=50) # Low quality for speed
+        return buffer.getvalue()
+        
+    except Exception as e:
+        print(f"Stream error: {e}")
+        return None
+
+async def handle_stream(request):
+    """MJPEG Streaming Endpoint."""
+    response = web.StreamResponse()
+    response.content_type = 'multipart/x-mixed-replace; boundary=frame'
+    await response.prepare(request)
+
+    try:
+        while True:
+            frame = await asyncio.to_thread(get_overlay_frame)
+            if frame:
+                await response.write(b'--frame\r\n')
+                await response.write(b'Content-Type: image/jpeg\r\n\r\n')
+                await response.write(frame)
+                await response.write(b'\r\n')
+            await asyncio.sleep(0.2) # Limit to ~5 FPS for performance
+    except:
+        pass
+    return response
+
+# ============================================
 # HTTP SERVER & LOGGING
 # ============================================
 
@@ -425,6 +485,100 @@ except ImportError:
     HAS_OVERLAY = False
     print("Warning: ai_overlay.py not found. Overlay disabled.")
 
+# ============================================
+# SAFETY SENTINEL
+# ============================================
+
+class CommandGuard:
+    def __init__(self):
+        self.safe_mode = True
+        self.pending_requests = {}
+        self.dangerous_commands = {
+            "run_powershell", "run_cmd", "file_write", "file_delete"
+        }
+    
+    def is_dangerous(self, command: str) -> bool:
+        return command in self.dangerous_commands
+    
+    async def request_approval(self, command: str, params: dict) -> bool:
+        """Block until approved or denied."""
+        import uuid
+        request_id = str(uuid.uuid4())
+        event = asyncio.Event()
+        
+        self.pending_requests[request_id] = {
+            "id": request_id,
+            "command": command,
+            "params": params,
+            "event": event,
+            "status": "pending",
+            "timestamp": time.time()
+        }
+        
+        print(f"[Safety] Blocking command '{command}' - Waiting for approval ({request_id})")
+        
+        # Wait for approval
+        await event.wait()
+        
+        status = self.pending_requests[request_id]["status"]
+        del self.pending_requests[request_id]
+        
+        return status == "approved"
+
+    def approve(self, request_id: str):
+        if request_id in self.pending_requests:
+            self.pending_requests[request_id]["status"] = "approved"
+            self.pending_requests[request_id]["event"].set()
+            return True
+        return False
+        
+    def deny(self, request_id: str):
+        if request_id in self.pending_requests:
+            self.pending_requests[request_id]["status"] = "denied"
+            self.pending_requests[request_id]["event"].set()
+            return True
+        return False
+
+    def set_mode(self, enabled: bool):
+        self.safe_mode = enabled
+
+guard = CommandGuard()
+
+async def handle_safety_approve(request):
+    data = await request.json()
+    req_id = data.get("id")
+    if guard.approve(req_id):
+        return web.json_response({"status": "approved"})
+    return web.json_response({"error": "Request not found"}, status=404)
+
+async def handle_safety_deny(request):
+    data = await request.json()
+    req_id = data.get("id")
+    if guard.deny(req_id):
+        return web.json_response({"status": "denied"})
+    return web.json_response({"error": "Request not found"}, status=404)
+
+async def handle_safety_mode(request):
+    data = await request.json()
+    enabled = data.get("enabled", True)
+    guard.set_mode(enabled)
+    return web.json_response({"status": "updated", "safe_mode": guard.safe_mode})
+
+async def handle_safety_pending(request):
+    """List pending requests (exclude event objects)."""
+    pending = []
+    for rid, info in guard.pending_requests.items():
+        pending.append({
+            "id": info["id"],
+            "command": info["command"],
+            "params": info["params"],
+            "timestamp": info["timestamp"]
+        })
+    return web.json_response({
+        "pending": pending,
+        "safe_mode": guard.safe_mode
+    })
+
 async def handle_execute(request):
     """Handle command execution requests."""
     try:
@@ -439,6 +593,15 @@ async def handle_execute(request):
         command = data.get("command")
         params = data.get("params", {})
         
+        # Safety Check
+        if guard.safe_mode and guard.is_dangerous(command):
+            log_command(command, error="Blocked by Safety Sentinel - Waiting for approval")
+            approved = await guard.request_approval(command, params)
+            if not approved:
+                log_command(command, error="Denied by User")
+                return web.json_response({"error": "Command denied by user security policy"}, status=403)
+            log_command(command, result="Approved by User - Executing...")
+
         # Check if user requested stop
         if HAS_OVERLAY and is_stopped():
             reset_stop()
@@ -513,6 +676,15 @@ async def main():
     app.router.add_post("/execute", handle_execute)
     app.router.add_get("/health", handle_health)
     app.router.add_get("/logs", handle_logs)
+    
+    # Safety Routes
+    app.router.add_get("/safety/pending", handle_safety_pending)
+    app.router.add_post("/safety/approve", handle_safety_approve)
+    app.router.add_post("/safety/deny", handle_safety_deny)
+    app.router.add_post("/safety/mode", handle_safety_mode)
+    
+    # Stream Route
+    app.router.add_get("/stream", handle_stream)
     
     # Dashboard Routes
     app.router.add_get("/", handle_index)

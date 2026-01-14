@@ -99,10 +99,12 @@ class AgentStorage:
     
     def get(self, agent_id: str) -> Optional[dict]:
         """Get an agent by ID."""
+        self._load()  # Reload to get updates from other processes
         return self._agents.get(agent_id)
     
     def get_all(self) -> Dict[str, dict]:
         """Get all registered agents."""
+        self._load()  # Reload to get updates from other processes
         return self._agents.copy()
     
     def get_first(self) -> Optional[tuple]:
@@ -114,6 +116,8 @@ class AgentStorage:
     
     def update_status(self, agent_id: str, status: str):
         """Update agent status (connected/disconnected)."""
+        # Reload from file to get any updates from other processes (e.g., token from local_agent)
+        self._load()
         if agent_id in self._agents:
             self._agents[agent_id]["status"] = status
             self._save()

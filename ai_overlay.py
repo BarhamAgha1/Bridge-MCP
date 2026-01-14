@@ -54,7 +54,7 @@ class AIOverlay:
             'text_dim': '#a0a0a0',
             'warning': '#ff6b6b',
             'success': '#4ade80',
-            'glass_border': '#ffffff22'
+            'glass_border': '#e0e0e0'
         }
     
     def start(self):

@@ -130,6 +130,21 @@ Bridge MCP "sees" your apps:
 - **UI Tree:** It can read the accessibility tree of Windows apps.
 - **Precision:** Knows exactly where buttons are (no more guessing pixels).
 
+## 🛡️ Safety Sentinel (Human-in-the-Loop)
+
+Bridge MCP now puts YOU in control:
+- **Command Interception:** Dangerous commands (writing files, running shell scripts) are BLOCKED by default.
+- **Approval Dashboard:** A notification appears on your local dashboard (`http://localhost:8006`).
+- **Safe Mode Toggle:** Want total autonomy? Toggle "Safe Mode" OFF (Always Approve) directly from the UI.
+- **Peace of Mind:** You can leave the agent running without fear of it deleting your files.
+
+## 👁️ Terminator Vision (Live Observability)
+
+See what the AI sees, in real-time:
+- **Live Stream:** The dashboard features a low-latency 1080p MJPEG stream of your desktop.
+- **Semantic Overlay:** Green bounding boxes highlight every button, link, and window the AI detects.
+- **Debug Instantly:** Visual confirmation that the AI has found the correct "Submit" button.
+
 ---
 
 ## 🚀 Quick Start
