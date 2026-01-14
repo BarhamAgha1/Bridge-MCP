@@ -610,3 +610,10 @@ Strategy:
 4. Verify each action with screenshot() before proceeding
 
 Execute this task step by step."""
+
+# ============================================
+# ENTRY POINT
+# ============================================
+
+if __name__ == "__main__":
+    mcp.run()
