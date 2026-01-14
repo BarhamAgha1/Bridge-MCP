@@ -77,6 +77,8 @@ pip install -r requirements-local.txt
 python local_agent.py
 ```
 
+🎉 **New:** Open `http://localhost:8006` to see your **Live Dashboard**!
+
 ### Step 2: Expose Your Agent (for remote access)
 
 Option A - Using ngrok:

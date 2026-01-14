@@ -283,8 +283,25 @@ COMMANDS = {
 }
 
 # ============================================
-# HTTP SERVER
+# HTTP SERVER & LOGGING
 # ============================================
+
+import time
+from collections import deque
+
+# Store last 50 logs
+command_logs = deque(maxlen=50)
+
+def log_command(command: str, result: dict = None, error: str = None):
+    """Log a command for the dashboard."""
+    entry = {
+        "timestamp": time.time(),
+        "command": command,
+        "status": "error" if error else "success"
+    }
+    if result: entry["result"] = result
+    if error: entry["error"] = error
+    command_logs.append(entry)
 
 async def handle_execute(request):
     """Handle command execution requests."""
@@ -294,17 +311,29 @@ async def handle_execute(request):
         params = data.get("params", {})
         
         if command not in COMMANDS:
-            return web.json_response({"error": f"Unknown command: {command}"}, status=400)
+            error_msg = f"Unknown command: {command}"
+            log_command(command, error=error_msg)
+            return web.json_response({"error": error_msg}, status=400)
         
         result = COMMANDS[command](params)
+        log_command(command, result=str(result)[:200] + "..." if len(str(result)) > 200 else result)
         return web.json_response(result)
     
     except Exception as e:
+        log_command(command if 'command' in locals() else "unknown", error=str(e))
         return web.json_response({"error": str(e)}, status=500)
 
 async def handle_health(request):
     """Health check endpoint."""
     return web.json_response({"status": "healthy", "agent": "Bridge MCP Local Agent"})
+
+async def handle_logs(request):
+    """Return recent logs for dashboard."""
+    return web.json_response(list(command_logs))
+
+async def handle_index(request):
+    """Serve the dashboard."""
+    return web.FileResponse('./static/index.html')
 
 def get_local_ip():
     """Get the local IP address."""
@@ -321,18 +350,23 @@ def get_local_ip():
 async def main():
     """Run the local agent server."""
     app = web.Application()
+    
+    # API Routes
     app.router.add_post("/execute", handle_execute)
     app.router.add_get("/health", handle_health)
+    app.router.add_get("/logs", handle_logs)
+    
+    # Dashboard Routes
+    app.router.add_get("/", handle_index)
+    app.router.add_static("/static", "./static")
     
     local_ip = get_local_ip()
     
     print("=" * 60)
     print("  Bridge MCP - Local Agent")
     print("=" * 60)
-    print(f"\n  Local URL:    http://127.0.0.1:{PORT}")
-    print(f"  Network URL:  http://{local_ip}:{PORT}")
-    print(f"\n  Register this agent using:")
-    print(f"    callback_url: http://{local_ip}:{PORT}")
+    print(f"\n  Dashboard:    http://127.0.0.1:{PORT}")
+    print(f"  Callback URL: http://{local_ip}:{PORT}")
     print("\n  For remote access, use ngrok:")
     print(f"    ngrok http {PORT}")
     print("=" * 60)

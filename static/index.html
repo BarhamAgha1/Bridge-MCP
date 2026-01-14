@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge MCP Agent</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent: #58a6ff;
+            --success: #2ea043;
+            --error: #da3633;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 { font-weight: 600; font-size: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .logo { color: var(--accent); }
+
+        .status-badge {
+            background: rgba(46, 160, 67, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(46, 160, 67, 0.4);
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .pulse {
+            width: 8px; height: 8px; background: var(--success); border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.5rem;
+        }
+
+        h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-primary); }
+
+        .info-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: var(--text-secondary); font-size: 0.9rem; }
+        .info-value { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+
+        .copy-box {
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent);
+            cursor: pointer;
+            transition: border-color 0.2s;
+            position: relative;
+            word-break: break-all;
+        }
+        .copy-box:hover { border-color: var(--accent); }
+        .copy-box::after {
+            content: "Click to copy";
+            position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+            font-size: 0.75rem; color: var(--text-secondary); font-family: 'Inter', sans-serif;
+            opacity: 0.6;
+        }
+
+        .terminal {
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-entry { margin-bottom: 0.5rem; border-bottom: 1px solid rgba(48, 54, 61, 0.5); padding-bottom: 0.5rem; }
+        .log-time { color: var(--text-secondary); opacity: 0.7; margin-right: 0.75rem; }
+        .log-cmd { color: var(--accent); font-weight: bold; }
+        .log-result { color: var(--text-primary); display: block; margin-top: 0.25rem; white-space: pre-wrap; }
+        .log-error { color: var(--error); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><span class="logo">⚡</span> Bridge MCP Agent</h1>
+        <div class="status-badge"><span class="pulse"></span> Online</div>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Connection Details</h2>
+            <div class="info-row">
+                <span class="info-label">Local IP</span>
+                <span class="info-value" id="local-ip">Loading...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Port</span>
+                <span class="info-value">8006</span>
+            </div>
+            <div style="margin-top: 1rem;">
+                <p class="info-label" style="margin-bottom: 0.5rem;">Callback URL (for registration)</p>
+                <div class="copy-box" id="callback-url" onclick="copyUrl()">
+                    http://localhost:8006
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Quick Actions</h2>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button onclick="testConnection()" style="padding: 0.5rem 1rem; background: var(--accent); border: none; border-radius: 4px; color: white; cursor: pointer; font-weight: 500;">Test Pulse</button>
+                <button onclick="clearLogs()" style="padding: 0.5rem 1rem; background: transparent; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary); cursor: pointer;">Clear Logs</button>
+            </div>
+            <p id="test-result" style="margin-top: 1rem; font-size: 0.9rem; min-height: 1.5em;"></p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>Live Activity Log</h2>
+            <span class="info-label">Auto-updating</span>
+        </div>
+        <div class="terminal" id="terminal">
+            <div class="log-entry">
+                <span class="log-time">System</span>
+                <span class="log-result">Waiting for commands...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Init
+        const protocol = window.location.protocol;
+        const host = window.location.host;
+        const baseUrl = `${protocol}//${host}`;
+        
+        document.getElementById('callback-url').innerText = baseUrl;
+        document.getElementById('local-ip').innerText = host.split(':')[0];
+
+        function copyUrl() {
+            const text = document.getElementById('callback-url').innerText;
+            navigator.clipboard.writeText(text);
+            const original = document.getElementById('callback-url').style.borderColor;
+            document.getElementById('callback-url').style.borderColor = 'var(--success)';
+            setTimeout(() => {
+                document.getElementById('callback-url').style.borderColor = '';
+            }, 500);
+        }
+
+        async function testConnection() {
+            const resEl = document.getElementById('test-result');
+            resEl.style.color = 'var(--text-secondary)';
+            resEl.innerText = 'Pinging...';
+            try {
+                const res = await fetch('/health');
+                const data = await res.json();
+                resEl.style.color = 'var(--success)';
+                resEl.innerText = `✅ Success: ${data.status}`;
+            } catch (e) {
+                resEl.style.color = 'var(--error)';
+                resEl.innerText = `❌ Error: ${e.message}`;
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById('terminal').innerHTML = '';
+        }
+
+        function addLog(entry) {
+            const term = document.getElementById('terminal');
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            
+            const time = new Date(entry.timestamp * 1000).toLocaleTimeString();
+            const resultClass = entry.status === 'error' ? 'log-error' : 'log-result';
+            
+            div.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-cmd">${entry.command}</span>
+                <span class="${resultClass}">${JSON.stringify(entry.result || entry.error, null, 2)}</span>
+            `;
+            term.prepend(div);
+        }
+
+        // Poll for logs every 2 seconds
+        setInterval(async () => {
+            try {
+                const res = await fetch('/logs');
+                const logs = await res.json();
+                const term = document.getElementById('terminal');
+                // Simple Diff: Clear and redraw if different (for simplicity in this v1)
+                // In production, we'd append only new ones.
+                if (logs.length > 0) {
+                    term.innerHTML = '';
+                    logs.reverse().forEach(addLog);
+                }
+            } catch (e) {
+                console.error("Failed to fetch logs", e);
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
