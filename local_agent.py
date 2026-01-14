@@ -303,6 +303,14 @@ def log_command(command: str, result: dict = None, error: str = None):
     if error: entry["error"] = error
     command_logs.append(entry)
 
+# AI Overlay
+try:
+    from ai_overlay import start_overlay, show_action, is_stopped, reset_stop
+    HAS_OVERLAY = True
+except ImportError:
+    HAS_OVERLAY = False
+    print("Warning: ai_overlay.py not found. Overlay disabled.")
+
 async def handle_execute(request):
     """Handle command execution requests."""
     try:
@@ -310,14 +318,37 @@ async def handle_execute(request):
         command = data.get("command")
         params = data.get("params", {})
         
+        # Check if user requested stop
+        if HAS_OVERLAY and is_stopped():
+            reset_stop()
+            error_msg = "Stopped by user via Overlay"
+            log_command("stop_request", error=error_msg)
+            return web.json_response({
+                "error": error_msg,
+                "message": "User clicked STOP button"
+            }, status=400)
+
         if command not in COMMANDS:
             error_msg = f"Unknown command: {command}"
             log_command(command, error=error_msg)
             return web.json_response({"error": error_msg}, status=400)
         
+        # Show action in overlay
+        if HAS_OVERLAY:
+            action_text = f"{command}"
+            if params:
+                param_str = ", ".join(f"{k}={v}" for k, v in list(params.items())[:2])
+                action_text = f"{command}({param_str})"
+            show_action(action_text)
+
+        # Execute
         result = COMMANDS[command](params)
         log_command(command, result=str(result)[:200] + "..." if len(str(result)) > 200 else result)
         return web.json_response(result)
+    
+    except Exception as e:
+        log_command(command if 'command' in locals() else "unknown", error=str(e))
+        return web.json_response({"error": str(e)}, status=500)
     
     except Exception as e:
         log_command(command if 'command' in locals() else "unknown", error=str(e))
@@ -360,6 +391,11 @@ async def main():
     app.router.add_get("/", handle_index)
     app.router.add_static("/static", "./static")
     
+    # Start Overlay
+    if HAS_OVERLAY:
+        start_overlay()
+        print("  ✅ AI Overlay started")
+    
     local_ip = get_local_ip()
     
     print("=" * 60)
@@ -376,7 +412,7 @@ async def main():
     site = web.TCPSite(runner, HOST, PORT)
     await site.start()
     
-    print(f"\n  ✅ Agent running on port {PORT}")
+    print(f"\n  [OK] Agent running on port {PORT}")
     print("  Press Ctrl+C to stop\n")
     
     # Keep running
