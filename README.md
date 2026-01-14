@@ -13,6 +13,58 @@
 
 ---
 
+## 🔄 How Persistence Works
+
+Bridge MCP v2.0 stores agent registrations in a **persistent JSON file**:
+
+- **Windows:** `%APPDATA%\bridge-mcp\agents.json`
+- **Linux/Mac:** `~/.config/bridge-mcp/agents.json`
+
+This means:
+- ✅ Register once, works forever
+- ✅ Survives Claude Code session restarts
+- ✅ Survives computer reboots
+- ✅ Works across all AI clients
+
+### First-Time Setup
+
+1. **Start the local agent:**
+```bash
+   cd Bridge-MCP
+   python local_agent.py
+```
+
+2. **The agent auto-registers itself** - no manual registration needed!
+
+3. **Verify in any Claude session:**
+```
+   Use list_agents() to see registered agents
+```
+
+### Troubleshooting
+
+If you see "No agents connected":
+
+1. **Check if local_agent.py is running** - it must be running in a terminal
+2. **Check health:** Use `check_agent_health()` tool
+3. **Manual register:** Use `register_agent("local", "http://127.0.0.1:8006", "My PC")`
+
+### Running Local Agent as Background Service
+
+For always-on access, install local_agent as a Windows service:
+```bash
+python install_service.py install
+python install_service.py start
+```
+
+To remove:
+```bash
+python install_service.py stop
+python install_service.py remove
+```
+
+---
+
 ## 🎯 What is Bridge MCP?
 
 Bridge MCP is a **Model Context Protocol (MCP)** server that gives **any AI** full control over a Windows PC. Whether you're using Claude, ChatGPT, Cursor, Gemini, or any other MCP-compatible AI, Bridge MCP lets you:
@@ -59,6 +111,27 @@ Bridge MCP uses a **Relay Architecture** to work across platforms:
 
 ---
 
+## 🔒 Enterprise-Grade Security
+
+Bridge MCP 2.0 includes:
+- **Auth Tokens:** Uses secure Bearer tokens to prevent unauthorized access.
+- **Auto-Config:** Tokens are auto-generated and saved to `agents.json`.
+
+## 🌐 Next-Gen Browser Automation
+
+Powered by **Playwright**, Bridge MCP can now:
+- **Click & Type:** Interact with any website element.
+- **Semantic Understanding:** Read page content programmatically.
+- **Headless Mode:** Run automations invisible or visible.
+
+## 🧠 Semantic Computer Vision
+
+Bridge MCP "sees" your apps:
+- **UI Tree:** It can read the accessibility tree of Windows apps.
+- **Precision:** Knows exactly where buttons are (no more guessing pixels).
+
+---
+
 ## 🚀 Quick Start
 
 ### Step 1: Clone the Repository
@@ -70,6 +143,7 @@ cd Bridge-MCP
 ### Step 2: Install Dependencies
 ```bash
 pip install -r requirements-local.txt
+playwright install
 ```
 
 ### Step 3: Start the Local Agent
@@ -220,6 +294,20 @@ Then use the ngrok URL (e.g., `https://xxxx.ngrok.io`) as your callback_url when
 | --- | --- | --- |
 | `chrome_open` | Open Chrome | `chrome_open("https://google.com")` |
 | `chrome_navigate` | Go to URL | `chrome_navigate("https://example.com")` |
+
+</details>
+
+<details>
+<summary><b>🌐 Browser Tools (Playwright - Advanced)</b></summary>
+
+| Tool | Description | Example |
+| --- | --- | --- |
+| `browser_navigate` | Go to URL | `browser_navigate("google.com")` |
+| `browser_click` | Click element (CSS) | `browser_click("#submit-btn")` |
+| `browser_type` | Type in element | `browser_type("#search", "hello")` |
+| `browser_press` | Press key | `browser_press("Enter")` |
+| `browser_content` | Get page text | `browser_content()` |
+| `browser_screenshot`| Browser screenshot | `browser_screenshot()` |
 
 </details>
 

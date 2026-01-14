@@ -5,3 +5,4 @@ pyperclip>=1.8.2
 uiautomation>=2.0.0
 fuzzywuzzy>=0.18.0
 python-Levenshtein>=0.21.0
+playwright>=1.40.0

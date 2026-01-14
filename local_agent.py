@@ -16,6 +16,40 @@ from typing import Optional
 from aiohttp import web
 import socket
 
+# Auth Token
+AUTH_TOKEN = None
+
+async def auto_register_with_bridge():
+    """
+    Automatically register this agent with the Bridge MCP config file.
+    This ensures persistence across sessions.
+    """
+    global AUTH_TOKEN
+    try:
+        # Import the config module
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent))
+        from config import agent_storage
+        
+        # Get local IP
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)
+        
+        # Register with multiple URLs for flexibility
+        callback_url = f"http://127.0.0.1:{PORT}"
+        # Register and get token
+        result = agent_storage.register("local", callback_url, f"Local PC ({hostname})")
+        AUTH_TOKEN = result.get("token")
+        
+        print(f"[Auto-registered] Agent 'local' at {callback_url}")
+        print(f"[Secure Token] {AUTH_TOKEN}")
+        print(f"[Config saved to] {agent_storage.agents_file}")
+        
+    except Exception as e:
+        print(f"[Warning] Could not auto-register: {e}")
+        print("[Info] Manual registration may be required")
+
 # Windows-specific imports (only work on Windows)
 try:
     import pyautogui
@@ -103,15 +137,49 @@ def execute_drag(start_x: int, start_y: int, end_x: int, end_y: int):
     pyautogui.drag(end_x - start_x, end_y - start_y)
     return {"status": "dragged", "from": [start_x, start_y], "to": [end_x, end_y]}
 
+def dump_tree(control, depth=0, max_depth=4):
+    """Recursively dump UI tree."""
+    if depth > max_depth: return None
+    
+    children = []
+    for child in control.GetChildren():
+        # Only interesting controls
+        if not child.IsOffscreen:
+            node = {
+                "name": child.Name,
+                "type": child.ControlTypeName,
+                "rect": [child.BoundingRectangle.left, child.BoundingRectangle.top, 
+                        child.BoundingRectangle.right, child.BoundingRectangle.bottom] if child.BoundingRectangle else None
+            }
+            # Recurse
+            sub = dump_tree(child, depth + 1, max_depth)
+            if sub: node["children"] = sub
+            children.append(node)
+    
+    return children if children else None
+
 def execute_get_desktop_state():
-    """Get desktop state."""
+    """Get desktop state including active window UI tree."""
     state = {
         "screen_size": pyautogui.size(),
         "mouse_position": pyautogui.position()
     }
     
     if HAS_UIAUTOMATION:
-        # Get open windows
+        # Get active window details (Semantic Vision)
+        try:
+            active = auto.GetFocusedControl().GetTopLevelControl()
+            state["active_window"] = {
+                "name": active.Name,
+                "rect": [active.BoundingRectangle.left, active.BoundingRectangle.top, 
+                        active.BoundingRectangle.right, active.BoundingRectangle.bottom],
+                # Dump the tree for the active window
+                "ui_tree": dump_tree(active, max_depth=3)
+            }
+        except Exception as e:
+            state["active_window_error"] = str(e)
+            
+        # List all top-level windows (Basic)
         windows = []
         for win in auto.GetRootControl().GetChildren():
             try:
@@ -124,7 +192,7 @@ def execute_get_desktop_state():
                     })
             except:
                 pass
-        state["windows"] = windows[:20]  # Limit to 20 windows
+        state["windows"] = windows[:20]
     
     return state
 
@@ -245,6 +313,44 @@ def execute_chrome_navigate(url: str):
     webbrowser.open(url)
     return {"status": "navigated", "url": url}
 
+# Playwright Tools
+try:
+    from local_agent_tools.playwright_browser import browser_manager
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
+    print("Warning: Playwright not found or error importing.")
+
+async def execute_browser_navigate(url: str):
+    if not HAS_PLAYWRIGHT: return {"error": "Playwright not installed"}
+    msg = await browser_manager.navigate(url)
+    return {"status": "navigated", "message": msg}
+
+async def execute_browser_click(selector: str):
+    if not HAS_PLAYWRIGHT: return {"error": "Playwright not installed"}
+    msg = await browser_manager.click(selector)
+    return {"status": "clicked", "message": msg}
+
+async def execute_browser_type(selector: str, text: str):
+    if not HAS_PLAYWRIGHT: return {"error": "Playwright not installed"}
+    msg = await browser_manager.type(selector, text)
+    return {"status": "typed", "message": msg}
+
+async def execute_browser_press(key: str):
+    if not HAS_PLAYWRIGHT: return {"error": "Playwright not installed"}
+    msg = await browser_manager.press(key)
+    return {"status": "pressed", "message": msg}
+
+async def execute_browser_screenshot():
+    if not HAS_PLAYWRIGHT: return {"error": "Playwright not installed"}
+    img = await browser_manager.screenshot()
+    return {"image": img}
+
+async def execute_browser_content():
+    if not HAS_PLAYWRIGHT: return {"error": "Playwright not installed"}
+    text = await browser_manager.get_content()
+    return {"content": text}
+
 def execute_wait(seconds: float):
     """Wait for seconds."""
     import time
@@ -280,6 +386,14 @@ COMMANDS = {
     "chrome_open": lambda p: execute_chrome_open(p.get("url")),
     "chrome_navigate": lambda p: execute_chrome_navigate(p["url"]),
     "wait": lambda p: execute_wait(p["seconds"]),
+    
+    # Browser Tools (Playwright)
+    "browser_navigate": lambda p: execute_browser_navigate(p["url"]),
+    "browser_click": lambda p: execute_browser_click(p["selector"]),
+    "browser_type": lambda p: execute_browser_type(p["selector"], p["text"]),
+    "browser_press": lambda p: execute_browser_press(p["key"]),
+    "browser_screenshot": lambda p: execute_browser_screenshot(),
+    "browser_content": lambda p: execute_browser_content(),
 }
 
 # ============================================
@@ -314,6 +428,13 @@ except ImportError:
 async def handle_execute(request):
     """Handle command execution requests."""
     try:
+        # Auth Check
+        if AUTH_TOKEN:
+            auth_header = request.headers.get("Authorization")
+            if not auth_header or auth_header != f"Bearer {AUTH_TOKEN}":
+                log_command("unauthorized_access", error="Invalid token")
+                return web.json_response({"error": "Unauthorized: Invalid or missing token"}, status=401)
+
         data = await request.json()
         command = data.get("command")
         params = data.get("params", {})
@@ -343,6 +464,9 @@ async def handle_execute(request):
 
         # Execute
         result = COMMANDS[command](params)
+        if asyncio.iscoroutine(result):
+            result = await result
+            
         log_command(command, result=str(result)[:200] + "..." if len(str(result)) > 200 else result)
         return web.json_response(result)
     
@@ -380,6 +504,9 @@ def get_local_ip():
 
 async def main():
     """Run the local agent server."""
+    # Try to auto-register on startup
+    await auto_register_with_bridge()
+
     app = web.Application()
     
     # API Routes
