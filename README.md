@@ -5,6 +5,8 @@ Currently designed for **Claude Code** and **Claude Desktop**.
 
 > [!NOTE]
 > This project was formerly known as "Universal PC Control".
+>
+> <!-- mcp-name: barhamagha1/bridge-mcp -->
 
 ## Overview
 Visual Desktop Bridge is a "body" for your AI "brain". It allows Claude to:
