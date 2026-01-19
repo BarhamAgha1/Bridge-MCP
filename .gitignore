@@ -1,0 +1,49 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+
+# IDEs
+.vscode/
+.idea/
+
+# Bridge MCP specific
+agents.json
+bridge-mcp.db
+*.log
+login_output.txt
+publish_error_full.txt
+pypi_upload_log.txt
+twine_debug.txt
+publish_debug.txt
+
+# Sensitive scripts (DO NOT COMMIT OR PACKAGE)
+upload_pypi*.py
+secrets.py
+active_token.txt

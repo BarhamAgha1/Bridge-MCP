@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "barhamagha1/bridge-mcp",
+  "description": "Visual Desktop Bridge - Give any AI full control over Windows to automate apps and inputs.",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/BarhamAgha1/Bridge-MCP",
+    "source": "github"
+  },
+  "version": "1.0.3",
+  "packages": [
+    {
+      "registry_type": "pypi",
+      "registry_base_url": "https://pypi.org",
+      "identifier": "bridge-mcp",
+      "version": "1.0.3",
+      "transport": {
+        "type": "stdio"
+      },
+      "environment_variables": []
+    }
+  ]
+}

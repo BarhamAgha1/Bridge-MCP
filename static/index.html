@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge MCP | Liquid Matrix</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #050508;
+            --glass-bg: rgba(20, 20, 30, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
+            --success: #10b981;
+            --error: #ef4444;
+            --font-ui: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Liquid Background Animation */
+        .liquid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+            filter: blur(40px);
+            animation: moveLiquid 60s infinite alternate;
+            /* Much slower */
+        }
+
+        @keyframes moveLiquid {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1.05);
+                /* Very subtle breathing */
+                opacity: 1;
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            padding: 1rem 0;
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 1.75rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-pill {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 0.35rem 1rem;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .col-main {
+            grid-column: span 8;
+        }
+
+        .col-side {
+            grid-column: span 4;
+        }
+
+        @media (max-width: 1024px) {
+
+            .col-main,
+            .col-side {
+                grid-column: span 12;
+            }
+        }
+
+        h2 {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Stream View */
+        .stream-container {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            border: 1px solid var(--glass-border);
+        }
+
+        .stream-overlay {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            padding: 0.25rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Info Rows */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .val-mono {
+            font-family: var(--font-mono);
+            color: var(--accent-cyan);
+            font-size: 0.9rem;
+        }
+
+        /* Buttons */
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-ui);
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2));
+            border-color: rgba(139, 92, 246, 0.3);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }
+
+        /* Terminal */
+        .terminal {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            height: 350px;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+        }
+
+        .log-entry {
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .log-time {
+            color: var(--text-secondary);
+            margin-right: 0.8rem;
+            opacity: 0.6;
+        }
+
+        .log-cmd {
+            color: var(--accent-cyan);
+            font-weight: 500;
+        }
+
+        .log-res {
+            color: #d1d5db;
+            display: block;
+            margin-top: 0.25rem;
+            padding-left: 1rem;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Switch */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 34px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--success);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="liquid-bg"></div>
+
+    <div class="container">
+        <header>
+            <h1><span style="font-size: 1.4em;">⚡</span> Bridge MCP</h1>
+            <div class="status-pill">
+                <div class="pulse-dot"></div> SYSTEM ONLINE
+            </div>
+        </header>
+
+        <div class="grid">
+            <div class="col-main glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Neural Vision Link</h2>
+                    <span style="font-size: 0.8rem; color: var(--accent-cyan);">● LIVE FEED</span>
+                </div>
+                <div class="stream-container">
+                    <img src="/stream" style="width: 100%; height: 100%; object-fit: contain;"
+                        alt="Waiting for vision stream...">
+                    <div class="stream-overlay">1080p • 60fps</div>
+                </div>
+            </div>
+
+            <div class="glass-card col-side">
+                <h2>System Status</h2>
+                <div class="info-row">
+                    <span style="color: var(--text-secondary);">IP Address</span>
+                    <span class="val-mono" id="local-ip">Loading...</span>
+                </div>
+                <div class="info-row">
+                    <span style="color: var(--text-secondary);">Port</span>
+                    <span class="val-mono">8007</span>
+                </div>
+                <div style="margin-top: 1.5rem;">
+                    <div style="margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Callback URL
+                    </div>
+                    <div id="callback-url" class="btn" style="text-align: center; width: 100%; cursor: pointer;"
+                        onclick="copyUrl()">
+                        http://localhost:8007
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+                    <button class="btn btn-primary" style="flex: 1;" onclick="testConnection()">Ping</button>
+                    <button class="btn" onclick="clearLogs()">Clear</button>
+                </div>
+                <div id="test-result"
+                    style="margin-top: 0.5rem; height: 1.2rem; font-size: 0.85rem; text-align: center;"></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="col-side glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2>Safety Sentinel</h2>
+                    <label class="switch">
+                        <input type="checkbox" id="safe-mode-toggle" checked onchange="toggleSafeMode()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div id="safety-status" class="status-pill"
+                    style="justify-content: center; width: 100%; margin-bottom: 1rem; background: rgba(255,255,255,0.05); color: var(--text-secondary); border-color: var(--glass-border);">
+                    Safety Active
+                </div>
+
+                <div id="pending-list" style="max-height: 250px; overflow-y: auto;">
+                    <div style="text-align: center; color: var(--text-secondary); opacity: 0.5; padding: 2rem;">
+                        No pending approvals
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-main glass-card">
+                <h2>Activity Matrix</h2>
+                <div class="terminal" id="terminal">
+                    <!-- Logs inserted here -->
+                    <div class="log-entry">
+                        <span class="log-time">SYSTEM</span>
+                        <span class="log-res" style="border:none; padding:0; display:inline;">Ready for
+                            instructions...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const protocol = window.location.protocol;
+        const host = window.location.host;
+        const baseUrl = `${protocol}//${host}`;
+
+        document.getElementById('callback-url').innerText = baseUrl;
+        document.getElementById('local-ip').innerText = host.split(':')[0];
+
+        function copyUrl() {
+            const el = document.getElementById('callback-url');
+            navigator.clipboard.writeText(el.innerText);
+            const originalText = el.innerText;
+            el.innerText = "Copied!";
+            el.style.borderColor = "var(--success)";
+            setTimeout(() => {
+                el.innerText = originalText;
+                el.style.borderColor = "";
+            }, 1000);
+        }
+
+        async function testConnection() {
+            const resEl = document.getElementById('test-result');
+            resEl.innerText = "Pinging...";
+            resEl.style.color = "var(--text-secondary)";
+            try {
+                await fetch('/health');
+                resEl.innerText = "Signal Strong (200 OK)";
+                resEl.style.color = "var(--success)";
+            } catch (e) {
+                resEl.innerText = "Connection Failed";
+                resEl.style.color = "var(--error)";
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById('terminal').innerHTML = '';
+        }
+
+        function addLog(entry) {
+            const term = document.getElementById('terminal');
+            const div = document.createElement('div');
+            div.className = 'log-entry';
+            const time = new Date(entry.timestamp * 1000).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            div.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-cmd">${entry.command}</span>
+                <span class="log-res" style="${entry.status === 'error' ? 'color: var(--error); border-color: var(--error);' : ''}">${JSON.stringify(entry.result || entry.error, null, 2)}</span>
+            `;
+            term.prepend(div);
+        }
+
+        // Pollers
+        setInterval(async () => {
+            try {
+                const res = await fetch('/logs');
+                const logs = await res.json();
+                if (logs.length > 0) {
+                    const term = document.getElementById('terminal');
+                    term.innerHTML = '';
+                    logs.reverse().forEach(addLog);
+                }
+            } catch (e) { }
+        }, 2000);
+
+        async function toggleSafeMode() {
+            const enabled = document.getElementById('safe-mode-toggle').checked;
+            await fetch('/safety/mode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }) });
+            updateSafetyUI(enabled);
+        }
+
+        function updateSafetyUI(enabled) {
+            const statusEl = document.getElementById('safety-status');
+            if (enabled) {
+                statusEl.innerText = "Safety Shield Active";
+                statusEl.style.color = "var(--success)";
+                statusEl.style.borderColor = "rgba(16, 185, 129, 0.3)";
+                statusEl.style.background = "rgba(16, 185, 129, 0.1)";
+            } else {
+                statusEl.innerText = "⚠️ Safety Disabled (Risky)";
+                statusEl.style.color = "var(--error)";
+                statusEl.style.borderColor = "rgba(239, 68, 68, 0.3)";
+                statusEl.style.background = "rgba(239, 68, 68, 0.1)";
+            }
+        }
+
+        async function resolveRequest(id, action) {
+            await fetch(`/safety/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+            pollSafety();
+        }
+
+        async function pollSafety() {
+            try {
+                const res = await fetch('/safety/pending');
+                const data = await res.json();
+
+                const toggle = document.getElementById('safe-mode-toggle');
+                if (toggle.checked !== data.safe_mode) {
+                    toggle.checked = data.safe_mode;
+                    updateSafetyUI(data.safe_mode);
+                }
+
+                const list = document.getElementById('pending-list');
+                if (data.pending.length === 0) {
+                    list.innerHTML = '<div style="text-align: center; color: var(--text-secondary); opacity: 0.5; padding: 2rem;">No pending approvals</div>';
+                } else {
+                    list.innerHTML = data.pending.map(req => `
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 8px; margin-bottom: 0.8rem;">
+                            <div style="font-weight: 600; color: var(--accent-cyan); margin-bottom: 0.5rem;">${req.command}</div>
+                            <div style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 1rem; font-family: var(--font-mono);">${JSON.stringify(req.params)}</div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button onclick="resolveRequest('${req.id}', 'approve')" class="btn" style="flex:1; background: var(--success); border:none; color:black; font-weight:600;">Approve</button>
+                                <button onclick="resolveRequest('${req.id}', 'deny')" class="btn" style="flex:1; background: var(--error); border:none; color:white;">Deny</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) { }
+        }
+        setInterval(pollSafety, 1000);
+    </script>
+</body>
+
+</html>
